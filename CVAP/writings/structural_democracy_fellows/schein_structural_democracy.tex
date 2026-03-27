@@ -1,0 +1,140 @@
+\pdfoutput=1
+\documentclass[11pt]{article}
+
+% alptex + small aesthetic tweaks + some extra math defs
+\input{preamble.tex}
+% \input{macros.tex}
+% \input{preamble/preamble_math}
+% \input{preamble/definitions_basic}
+% bibtex import + some code to strip away useless bib info (volume number, isbn, and the ilk), and to standardize capitalization
+% warning: the arxiv uses an outdated bibtex, which causes cryptic and frustrating upload errors 
+% easiest solution: install texlive 2016 from ftp://tug.org/historic/systems/texlive/ (download the ISO) and compile using the texlive 2016 pdflatex and bibtex
+% alternatively, look upon https://github.com/plk/biblatex/wiki/biblatex-and-the-arXiv and despair. 
+
+% \input{preamble/minimalist_biblatex}
+% \addbibresource{networks,language,causality}
+
+%********************************************************************
+% Extra definitions
+%********************************************************************
+\usepackage{natbib}
+\usepackage{enumitem} % tight enumerates
+\usepackage[separate-uncertainty=true,multi-part-units=single]{siunitx} % better table control
+% \usepackage{amsmath}
+% \usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage{titling}
+\usepackage{fancyhdr}
+\usepackage{nicefrac}
+\pagestyle{fancy}
+\lhead{\textit{Aaron Schein}}
+\rhead{\thepage}
+\cfoot{}
+\chead{\textbf{Bayesian Small-Area Estimation for Structural Democracy}}
+% \cfoot{center of the footer!}
+\renewcommand{\headrulewidth}{2pt}
+% \renewcommand{\footrulewidth}{0.7pt}
+% \pagenumbering{gobble}
+% \thispagestyle{empty}
+
+% \setlength{\droptitle}{-3cm}
+
+% frontmatter
+\usepackage[affil-it]{authblk}
+
+% \title{Research Statement}
+% \date{} 
+% \author{Aaron Schein\\Data Science Institute, Columbia University}
+% \affil[1]{}
+
+\begin{document}
+
+% My research is at the intersection of machine learning and statistics, with a focus on developing principled methods for analyzing modern large-scale data of social and political phenomena. The social sciences are transforming into data-intensive fields with the need for scalable, expressive, and trustworthy methods, and researchers that can work collaboratively across disciplinary boundaries. My background and training afford me a unique perspective to approach this important emerging area. Through my PhD in Bayesian machine learning with Hanna Wallach at UMass Amherst, my postdoctoral research on digital field experiments at Columbia's Data Science Institute with David Blei and Donald Green, my practical experience applying machine learning in industry at Google, Microsoft, and PredictWise, and in policy at MITRE, I have honed a unique set of skills for computational social science research. My vision is to lead a diverse and interdisciplinary research group to contribute principled and data-driven accounts of social and political phenomena that bear on important questions of public policy. While this vision primarily motivates me, my research develops general methods that can be applied widely. I collaborate closely with experts in other fields, including genomics, neuroscience, and marketing, among others, to extend and apply my methods to analyze their data. Through my ongoing collaboration with Patrick Flaherty's computational biology lab at UMass Amherst, for instance, I develop Bayesian models and scalable inference techniques to analyze (epi)genetic data for cancer research. My general philosophy is that a tailored ``shoe leather'' approach to data science will solve real-world problems in policy while also yielding general methods and techniques with broad impact throughout the social and natural sciences.\looseness=-1 
+
+
+
+
+\section*{Proposed research}
+
+% \paragraph{Small-area estimation of CVAP.}
+Enforcement of the 1965 Voting Right Act's stipulation against racial gerrymandering relies heavily on lawsuits that are routinely brought against state officials by political parties and civil rights advocacy groups. Legal arguments in such cases hinge on claims about the racial/ethnic composition of the \textit{citizen voting-age population (CVAP)}---i.e., the population of eligible voters. Although critically important for the protection of minority groups' rights to representation, there are no authoritative sources for this data at the level of Census blocks, which is the spatial resolution required to argue gerrymandering cases. Litigants in such cases appeal instead to estimates of block-level CVAP by race/ethnicity, typically supplied by expert witnesses. Despite the role of such estimates, there are no accepted best practices for producing them, and competing methods can yield substantially different results.~\looseness=-1
+
+The need to estimate CVAP stems from the U.S. Census Bureau's exclusion of any question about citizenship status in the Decennial Census. The Census yields block-level \textit{voting-age population (VAP)} counts by race/ethnicity which are legally considered ground-truth data in gerrymandering cases. However, these counts conflate citizens (i.e.,~eligible voters) with non-citizens. Legally-admissible estimates of CVAP for a given block $b$ and racial/ethnic category $r$ are thus obtained by multiplying the Census-given VAP by some estimate of the citizenship rate $\omega_{r,b} \in [0,1]$:
+\begin{align} 
+\widehat{\textrm{CVAP}}_{r,\,b}  = \textrm{VAP}^{\textrm{Census}}_{r,\,b}  \times \widehat{\omega}_{r,b}
+\end{align}
+CVAP estimation thus reduces to estimating the rates $\omega_{r,b}$. The Bureau conducts small-sample surveys to produce population estimates at coarser spatial resolutions, but which contain additional attributes. In particular, the Bureau conducts the American Community Survey (ACS), which solicits race/ethnicity and citizenship status, among other attributes, from around 3.5 million households per year, and compiles this data into tract-level VAP and CVAP counts by race/ethnicity. A simple estimation strategy is thus
+\begin{align} 
+\label{eq:dvap}
+\widehat{\omega}_{r,b} = \tfrac{\textrm{CVAP}^{\textrm{ACS}}_{r,\,t[b]}}{\textrm{VAP}^{\textrm{ACS}}_{r,\,t[b]}}
+\end{align}
+where $t[b]$ is the Census tract containing block $b$. This strategy---referred to by Moon Duchin and others as \textit{discounted VAP (DVAP)}---already represents an improvement over more na\"ive strategies routinely taken by litigants, in practice. Nevertheless, several issues hamper the practical deployment of DVAP---most notably, the presence of zero-valued $\textrm{VAP}^{\textrm{ACS}}_{r,\,t[b]}$ counts---and there are many ways it might be improved to better reflect known (or assumed) structure. \textbf{This project seeks to explore those ways. Specifically, we seek to 1) develop a family of novel methods for CVAP estimation, 2) understand trade-offs in the downstream effects of different methods' deployment in gerrymandering cases, and 3) advocate for a single ``best practice'' method and release its estimates as a public resource.} In what follows, we outline some threads of the proposed research, all unified under a probabilistic framework. 
+
+DVAP can be understood as maximum likelihood estimation (MLE) under the following model:
+\begin{align} 
+\label{eq:likelihood}
+\textrm{CVAP}^{\textrm{ACS}}_{r,\,t} &\sim \textrm{Binomial}\left(\textrm{VAP}^{\textrm{ACS}}_{r,\,t},\, \omega_{r,t}\right), & \textrm{CVAP}^{\textrm{Census}}_{r,\,b} &\sim \textrm{Binomial}\left(\textrm{VAP}^{\textrm{Census}}_{r,\,b},\, \omega_{r,t[b]}\right)
+\end{align}
+which assumes that the (observed) CVAP counts from the ACS and (latent) CVAP counts from the Census are independently Binomially distributed with homogeneous tract-level citizenship rates $\omega_{r,t}$. Casting DVAP in terms of MLE situates it within a more general class of problems known as~\textit{small-area estimation (SAE)}~\citep{ghosh1994small}, which are characterized by having sparse data on many units. Models for SAE overcome sparsity by ``borrowing information'' across units, such as assuming homogeneous rates across all blocks within a tract, as in the model above. More sophisticated forms of parameter ``shrinkage'' can be specified either via the incorporation of covariates on units, and/or the specification of prior distributions in a hierarchical/empirical Bayesian modeling framework.
+
+\paragraph{Hierarchical/empirical Bayesian modeling.} A Bayesian approach to the previous model would assume $\omega_{r,t} \sim  g(\cdot)$ from some prior distribution. For example $\omega_{r,t} \stackrel{\textrm{iid}}{\sim} \textrm{Beta}(\alpha_{r,\,s[t]}, \beta_{r,\,s[t]})$ assumes that the citizenship rates across the tracts $t$ in the same state $s[t]$ for a given race/ethnicity $r$ are all drawn i.i.d.~from the same Beta distribution. For fixed prior parameters $\alpha_{r,\,s[t]}$ and $\beta_{r,\,s[t]}$, the maximum-a-posteriori estimation of $\omega_{r,t}$ with such a prior would then be:
+\begin{align}
+\widehat{\omega}_{r, t} = \tfrac{\alpha_{r,\,s[t]} + \textrm{CVAP}^{\textrm{ACS}}_{r,\,t}}{\alpha_{r,\,s[t]} + \beta_{r,\,s[t]} +  \textrm{VAP}^{\textrm{ACS}}_{r,\,t}}
+\end{align}
+where the prior parameters act as ``smoothing'' terms that naturally obviate the need for any heuristic ways to handle sparsity. When fixed to some constant $\alpha_{r,\,s}=\beta_{r,\,s}=c$ (e.g., $c=1$) this is known as ``Laplace smoothing''. However, these terms can themselves be fit to the data, an approach known as \textit{empirical Bayes}~\citep{efron2019bayes}. Hierarchical priors could also be specified---i.e., $\alpha_{r,\,s} \sim g'(\cdot)$---which promote more information-borrowing across units. Many alternate model specifications to this are of interest.
+
+\textbf{Incorporating covariates.} Information such as average income, urbanicity, or business density could be incorporated to promote more flexible shrinkage. For instance, in the model above, one could set $\alpha_{r,\,s} = \exp\left(\boldsymbol{w}_r^\top \boldsymbol{x}_{s}\right)$, where $\boldsymbol{x}_s$ are covariates specific to state $s$ and $\boldsymbol{w}_r$ are coefficients specific to race/ethnicity $r$. Drawing on polling literature for \textit{multilevel regression}~\citep{park2004bayesian}, we could incorporate covariates at multiple resolutions---e.g., tract- and state-level. Again, there is wide flexibility in where covariates could enter the model, and many alternative specifications are of interest.
+
+\textbf{Non-citizen non-response bias.} Non-citizens may be less likely to respond to the ACS than the Census~\citep{rothbaum2021addressing}, which introduces non-response bias. Drawing on a literature in polling~\citep{little1982models} and ecology~\citep{mackenzie2002estimating}, among other fields, we could model non-response directly---e.g., one could change the likelihood in~\cref{eq:likelihood} to
+\begin{align} 
+\textrm{CVAP}^{\textrm{ACS}}_{r,\,t} &\sim \textrm{Binomial}\left(\textrm{VAP}^{\textrm{ACS}}_{r,\,t},\, 1 - \rho_{r,t}(1-\,\omega_{r,t})\right), & \textrm{CVAP}^{\textrm{Census}}_{r,\,b} &\sim \textrm{Binomial}\left(\textrm{VAP}^{\textrm{Census}}_{r,\,b},\, \omega_{r,t[b]}\right)
+\end{align}
+where $\rho_{r,t} \in (0,1]$ is the proportion of non-citizen Census respondents who also respond to the ACS, which could either be estimated via ancillary data, or assigned a range of plausible values for the purpose of sensitivity analysis. Again, a large range of specifications for this are of interest.
+
+\textbf{Temporal alignment across Decennial Census and ACS.}
+The Census counts $\textrm{VAP}^{\textrm{Census}}_{r,\,b}$ may be up to ten years old at the time of litigation. Although litigants must adhere to the ``legal fiction'' that the counts are ground truth, it remains an open question as to whether and how to temporally align the ACS data used to derive estimates of the citizenship rates $\omega_{r,b}$. As an example of why this matters, consider a block $b$ that has experienced a recent influx of Hispanic immigrants. The citizenship rate among Hispanics reflected in the most recent ACS may be much lower than it was 10 years prior, and combining it with VAP from the previous Census could lead to a substantial under-estimate of current Hispanic CVAP.  
+
+% \textbf{Sensitivity analysis and uncertainty quantification.} Many modeling decisions will ultimately rest on assumptions that are empirically uncheckable. Although uncheckable, the sensitivity of downstream inferences to modeling assumptions can be assessed. A modeling choice may be inconsequential if downstream analyses are invariant to it its value.
+
+\textbf{Application to partisan sorting.} Methodology developed for CVAP estimation could be adapted for related problems. In particular, there is no authoritative data source for the partisanship of neighborhoods in the United States. The tendency of co-partisans to live nearby to each other---i.e., \textit{partisan sorting}---is a descriptive fact that has fueled theoretical speculation in political science about the drivers of polarization~\citep{brown2021measurement}. However, much of this work does not account for the confounding effects of sorting by demographic attributes, like race, or by (latent) preferences. Disentangling the drivers of partisan sorting requires better small-area measurements of demographic-conditioned partisanship. This problem shares many statistical aspects with the problem of CVAP estimation, and solutions to the two will share methodological themes, as well as underlying data sets.
+
+% \paragraph{Bayesian small-area estimation of partisanship over space and time.}
+
+% \paragraph{Assessing the causal drivers of partisan sorting in the US.}
+
+% \paragraph{Measures of spatial partisan sorting.}
+
+% \paragraph{Proposed schedule.} The plan
+
+\textbf{Proposed budget.} I am working with Chris Wolfram, a PhD student in Computer Science. Funding to support a graduate research assistant for a calendar year is around \$75,000. In addition, I plan to support travel to conferences, such as POLMETH, to present and share our work. Travel to such conferences for one person is typically \$1,500, including registration, airfare and lodging. Finally, storing and querying large administrative data files, such as the US voterfile, can be costly. This year, our lab has generated costs of over \$2,000. In summary, a requested budget of \$80,000 can be broken down as:~\looseness=-1
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|r|}
+\hline
+\textbf{Item} & \textbf{Cost} \\ \hline
+Graduate research assistant (3 terms; Winter 2025--Fall 2025) & \$75,000 \\ \hline
+Conference travel (2 persons or 2 trips) & \$3,000 \\ \hline
+Data storage, querying, and compute & \$2,000 \\ \hline
+\textbf{Total} & \textbf{\$80,000} \\ \hline
+\end{tabular}
+\caption{Proposed budget breakdown.}
+\label{tab:budget}
+\end{table}
+\section*{Past published research relevant to structural democracy}
+I have a demonstrated record of research along several lines that are relevant to this---in particular, several threads are in Bayesian measurement modeling for complex data, and more specifically for sparse contingency tables, to which data from the ACS and Census conform. I also have a record on statistical methodology for data-intensive political science applications generally, much of which concerns elections.~\looseness=-1
+
+\textbf{Bayesian measurement modeling for complex discrete data.} A significant thread of my work is motivated by modern ``dyadic event'' data sets of international relations, containing billions of micro-records of the form ``country $i$ took action $a$ to country $j$ at time $t$''. With several co-authors, I have introduced a number of hierarchical Bayesian models and scalable posterior inference techniques to infer complex latent structure relating to multi-way networks and temporal dynamics that underlie such data. One line of this work developed some of the first Bayesian approaches for non-negative tensor decomposition of sparse count tensors and demonstrated that such methods measure latent multilateral structure from country-to-country events~\citep{schein2015bayesian,schein2015networks,schein2016bayesian,hood2024ell_0}. Another line of this work introduces fundamentally new non-Gaussian dynamical systems that are tailored to the ``bursty'' temporal dynamics of high-dimensional sequences of dyadic event counts~\citep{schein2016pgds,schein2019poisson,stoehr2023ordered}. At a higher level, this work seeks to redress the lack of probabilistic models for complex structure in \emph{high-dimensional discrete data}, which typically exhibit sparsity, overdispersion, ``burstiness'', and other properties that challenge traditional Gaussian-based models~\citep{schein2019allocative}. Among other general approaches for modeling discrete today, I developed approaches for contingency table analysis under for differential privacy, which likely has applications to Census data~\citep{schein2019locally}.~\looseness=-1
+
+\textbf{Large-scale field experiments on ``get out the vote'' interventions.} Another line of my work has focused on assessing the causal effects of friend-to-friend mobilization in US elections. With David Blei and Donald Green, I have designed and analyzed large-scale digital field experiments on mobile apps designed to help users nudge their friends to vote~\citep{schein2021outvote,schein2021code}. This research contends with the tricky task of randomizing interactions between friends in a way that is ethical and unobtrusive while still yielding strategies for precise estimation of causal effects. Our study conducted during the 2018 US midterms was the first large-scale experiment on friend-to-friend ``get out the vote'' tactics and was covered by \textit{NBC News}, \textit{The New Yorker}, and the \textit{Financial Times}, for which I was commissioned to write an op-ed~\citep{schein2020FT}. In addition to friend-to-friend texting, I have also worked on assessing the causal effect of billboard advertisements on turnout~\citep{green2024billboard}.~\looseness=-1
+
+\textbf{Other data-intensive political science applications.} In collaboration with Nikhil Garg's lab at Cornell, I recently developed an approach to mitigating ``argmax bias'', which we showed is present in U.S.~voterfile data and overstates the number of white voters~\citep{dong2024addressing}. In collaboration with political scientists at the UNC Charlotte, I recently developed a hierarchical Bayesian model to estimate the casualty rates in Russian's invasion of Ukraine from sparse and biased news reports~\citep{radford2023estimating}; this problem shares many aspects with small-area estimation problems. Finally, I have more recently worked on the problem of studying how large-language models represent and simulate political ideology, with a particular focus on U.S.~politics~\citep{o2023measurement}.
+
+\section*{Conclusion} Estimating block-level CVAP by race/ethnicity is a small-area estimation problem that is critical for the enforcement of voting rights in the United States. I have a record of scholarship on Bayesian methodology for models tailored to the statistical aspects of high-dimensional sparse count data, which the data underlying CVAP estimation conforms to. I also have a record of scholarship more generally on statistical and machine learning methodology for data-intensive problems in political science. The methodological work proposed here for CVAP estimation has a direct application to small area estimation of demographic-conditioned partisanship, which would be instrumental in testing recent theories about political sorting and polarization.
+
+% \pagebreak
+\bibliographystyle{unsrt}
+\bibliography{references}
+
+\end{document}
+
+

@@ -1,0 +1,135 @@
+\pdfoutput=1
+\documentclass[12pt]{article}
+% Load preamble (packages, math, definitions, comments)
+\input{preamble}
+% Bibliography: natbib (for biblatex, see preamble/minimalist_biblatex.tex)
+\usepackage{natbib}
+% Provides author/affiliation formatting with italic affiliations
+\usepackage[affil-it]{authblk}
+
+\title{CVAP Race/Ethnicity Category Conversion Notes}
+\author{Christopher Wolfram}
+
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{The problem}
+Under the Census ontology, each person has an ethnicity and a race. Ethnicity is a binary variable recording whether or not the respondent is Hispanic or Latino. Race is represented as any non-empty subset of the following six race categories: ``White'', ``Black or African American'', ``American Indian and Alaska Native'', ``Asian'', ``Native Hawaiian and Other Pacific Islander'', and ``Some other race''. Many respondents only select one race category, but some select multiple. Together the race and ethnicity variables define an order-7 tensor with one axis for ethnicity and one axis for each of the six race categories.
+
+For the purposes of redistricting litigation, we need estimates of CVAP for particular contractions of this tensor, like the coalition (union) of ``Black or African American'' and ``Hispanic or Latino'' people. However, the main ACS tables (which are the only source for some variables needed for CVAP) only provide particular contractions of the race/ethnicity tensor.
+
+The challenge here is to estimate the needed variables from the ACS tables on the particular race/ethnicity categories that are needed for litigation.
+
+There is also an added problem that the Census changed the race question on the 2020 ACS. Ideally, we would like to get estimates that align with the post-2020 ACS race question (which is the same as the 2020 Decennial Census race question).
+
+
+\section{Data sources}
+There are a few different data sources that we can use to estimate the needed variables. First, some notation.
+
+\newcommand{\var}{\mathcal{X}}
+\newcommand{\rc}[1]{r_{\textrm{#1}}}
+\subsection{Notation}
+Let $\var$ be a tensor of counts indexed by geography and race/ethnicity category. In particular, let $\var_{g,h,\rc{W},\rc{B},\ldots,\rc{O}}$ be the count among people in geography $g$ with Hispanic or Latino ethnicity $h$ and race categories $r_\textrm{W},r_\textrm{B},\ldots,r_\textrm{O}$. In practice $\var$ will be something like the voting age population (VAP), and $g$ will represent a block group. The dimensions of $\var$ are $|G| \times 2 \times \dots \times 2$ where $G$ is the set of geographies (e.g. block groups).
+
+\subsection{ACS detailed tables}
+From the ACS detailed tables we have access to various contractions of $\var$. In particular, we have
+\begin{align*}
+    \var_{g,\rc{W}=1} &= \sum_{h \in \{0,1\}} \var_{g,h,\rc{W}=1, \rc{B}=0, \dots, \rc{O}=0} \tag{White Alone} \\
+    \var_{g,\rc{B}=1} &= \sum_{h \in \{0,1\}} \var_{g,h,\rc{W}=0, \rc{B}=1, \dots, \rc{O}=0} \tag{Black or African American Alone} \\
+    \vdots \\
+    \var_{g,h=1} &= \sum_{\rc{W},\rc{B},\ldots,\rc{O} \in \{0,1\}} \var_{g,h=1,\rc{W},\rc{B},\ldots,\rc{O}} \tag{Hispanic or Latino} \\
+    \var_{g,h=0,\rc{W}=1} &= \var_{g,h=0,\rc{W}=1,\rc{B}=0,\ldots,\rc{O}=0} \tag{White Alone, Not Hispanic or Latino}
+\end{align*}
+
+\subsection{PUMS data}
+PUMS gives us the full race/ethnicity tensor, so we can construct any race/ethnicity category we need. However, PUMS are only provided at a low spacial resolution (Public Use Microdata Areas, or PUMAs). Thus, we have access to
+\begin{equation*}
+    \var_{g^\star,h,\rc{W},\rc{B},\dots,\rc{O}} = \sum_{g \in g^\star} \var_{g,h,\rc{W}, \rc{B}, \dots, \rc{O}}
+\end{equation*}
+where $g^\star$ is a PUMA.
+
+
+\section{Questionaire changes}
+The 2020 Census questionaire has two questions: an ethnicity question and a race question. The ethnicity question asks whether or not the respondent is Hispanic or Latino. The race question asks the respondent to select all races that apply to them. It consists of checkboxes that represent different race categories, as well as free-input fields where the respondent can specify their ancestry in more detail (\cref{fig:2020_dec_race_question}). For example, one could check the box for ``Asian'' and then specify their ancestry as specifically ``Vietnamese'' in the free-input field.
+
+Since 2020, the ACS has adopted the same race question as the 2020 Decennial Census (\cref{fig:2020_acs_race_question}). However, prior to 2020, the ACS used a different race question (\cref{fig:2019_dec_race_question}). The main change is that before 2020, the ACS did not include a free-input field under the ``White'' or ``Black or African American'' checkboxes, and generally provided less detail about who might be expected to check them. As we will see later, the post-2020 race question generally encouraged more respondents to check ``White'' than before. For example, the new question explains that respondents identifying as ``Lebanese'' or ``Egyptian'' should check the ``White'' checkbox and then write their specific ancestry in the free-input field, where before those respondents would likely have checked ``Some other race''.
+
+\begin{figure}[t]
+    \centering
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth, page=3, trim={12cm 12.5cm 1cm 1cm}, clip]{questionaires/2020-informational-questionnaire-english_DI-Q1.pdf}
+        \caption{2020 Decennial Census}
+        \label{fig:2020_dec_race_question}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth, page=2, trim={10.5cm 4cm 1.7cm 8.75cm}, clip]{questionaires/quest20.pdf}
+        \caption{2020 ACS}
+        \label{fig:2020_acs_race_question}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth, page=2, trim={0.75cm 0.95cm 13.15cm 17.3cm}, clip]{questionaires/quest19.pdf}
+        \caption{2019 ACS}
+        \label{fig:2019_dec_race_question}
+    \end{subfigure}
+    \caption{The race question has changed between Decennial and ACS questionaires and over time. The 2020 ACS race question is essentially the same as the 2020 Decennial Census race question, but the 2019 ACS race question was shorter, including less detailed explainations of the different categories and providing fewer free-input fields.}
+    \label{fig:race_questions}
+\end{figure}
+
+
+\section{Options}
+
+\subsection{Use only ACS detailed tables}
+This is the simplest (but probably most incorrect) option. Just use the ACS variables (e.g., ``Black or African American alone'') as stand-ins for the correct variables. In this model, the citizenship rate for the ACS variable is simply assumed to equal the citizenship rate for the target variable (e.g., ``Black or African American or Hispanic or Latino''). This assumption is almost certainly wrong in most cases.
+
+\subsection{Use only PUMS data}
+PUMS gives us the full race/ethnicity tensor, so we can construct any race/ethnicity category we need. However, PUMS are only provided at a low spacial resolution (Public Use Microdata Areas, or PUMAs). In addition, PUMS data also suffers from the same problems because of the change to the race question in 2020, which could only be solved by restricting to the 1-year PUMS data from 2020 through 2024 (the latest vintage currently available). However, the 1-year PUMS data is only available for geographies containing at least 65,000 people \citep{pums_data_release_rules}.
+
+\subsection{Use PUMS to disaggregate ACS detailed table estimates}
+It seems that the best way to do this is to somehow use the PUMS data to disaggregate the ACS detailed table estimates by race category, or alternatively, to use the ACS detailed tables too disaggregate the PUMS data by geography.
+
+To handle this problem more generally, suppose we flatten $\var$ into a vector $x \in \mathbb{Z}^n$. We then have a collection of marginals $y \in \mathbb{Z}^m$ where $y_j = \sum_{i \in S_j} x_i$ for subsets $S_j \subseteq \{1,2,\dots,n\}$. To be concrete, $S_j$ might represent the indices that need to be summed up to get a marginal like ``Black or African American alone'', and $y_j$ is the associated sum. We observe $y$, or at least a noisy version of $y$. Another way to write this is to let $A \in \{0,1\}^{m \times n}$ be a matrix where $A_{j,i} = \mathbb{1}\{i \in S_j\}$, such that $y = Ax$. The goal now is to get a posterior distribution for $x$ given that our observations of $y$ are noisy. Here are a few ideas for models.
+
+\subsection{Pseudoinverse}
+Because $y = Ax$, if there were no noise in $y$, and if $A$ were invertible, we could simply compute $x$ with $x = A^{-1}y$. However, $A$ is probably not invertible because $n$ is likely far greater than $m$, so it is not even square. That means we cannot use the inverse, but we could use the pseudoinverse of $A$, denoted $A^+$, which is the matrix that minimizes the squared error $\|AA^+y - y\|^2$. The pseudoinverse is easy to compute, and its only downsides are that it does not directly let us incorporate uncertainty in $y$ nor does it give uncertainty in $\hat{x} = A^+y$. (I am not sure, but this might be closely relate to the Bayesian normal-normal model below.)
+
+\subsubsection{Poisson model}
+In this model, we put a Poisson prior over $x_i$.
+\begin{equation*}
+    x_i \sim \mathrm{Poisson}(\lambda)
+\end{equation*}
+We also need to have some noise model for $y$. One option is for it to also be Poisson.
+\begin{equation*}
+    y_j \sim \mathrm{Poisson}\left(\sum_{i \in S_j} x_i\right)
+\end{equation*}
+The likelihood for $y_j$ could be something else (like a negative binomial, etc.) though I am not sure what. For example, it could be normal.
+\begin{equation*}
+    y_j \sim \mathrm{Normal}\left(\sum_{i \in S_j} x_i, \sigma_j\right)
+\end{equation*}
+This is nice because many of these marginals are reported as an estimate and standard error, but it is bad in that $y_j$ is discrete (and positive) and so this has the wrong support. (We actually have access to not just the standard error, but 80 draws from the distribution, though I am not sure how to use this.)
+
+\subsubsection{Dirichlet-Multinomial model}
+Let $N = \sum_i x_i$ (which we may assume we have access to). Then,
+\begin{align*}
+    \pi &\sim \mathrm{Dirichlet}(\alpha) \\
+    x &\sim \mathrm{Multinomial}(N, \pi)
+\end{align*}
+I am not sure how this model relates to the Poisson model above, and it might be the same in some way.
+
+\subsubsection{Normal-Normal model}
+This model is quite unprincipled but it is simple to implement and I think it has a closed-form solution. Let
+\begin{align*}
+    x \sim \mathrm{Normal}(\mu_0, \Sigma_0) \\
+    y \sim \mathrm{Normal}(Ax, \sigma I)
+\end{align*}
+where $\sigma$ is the standard deviation of the noise. This is easy to fit, but now $x$ (not to mention $y$) is continuous and not necassarily non-negative which is not what we want. (I am not sure, but this might closely relate to the pseudoinverse approach above.)
+
+\subsubsection{Iterative Proportional Fitting (IPF)}
+I am not too familiar with this, but it seems like a relevant procedure.
+
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}
