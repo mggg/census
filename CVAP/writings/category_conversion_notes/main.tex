@@ -39,8 +39,10 @@ From the ACS detailed tables we have access to various contractions of $\var$. I
     \var_{g,\rc{W}=1} &= \sum_{h \in \{0,1\}} \var_{g,h,\rc{W}=1, \rc{B}=0, \dots, \rc{O}=0} \tag{White Alone} \\
     \var_{g,\rc{B}=1} &= \sum_{h \in \{0,1\}} \var_{g,h,\rc{W}=0, \rc{B}=1, \dots, \rc{O}=0} \tag{Black or African American Alone} \\
     \vdots \\
+    \var_{g,2+} &= \sum_{h,\rc{W},\rc{B},\dots,\rc{O} \in \{0,1\}} \mathbb{1}(\rc{W} + \rc{B} + \dots + \rc{O} \geq 2)\var_{g,h,\rc{W}, \rc{B}, \dots, \rc{O}} \tag{Two or More} \\
     \var_{g,h=1} &= \sum_{\rc{W},\rc{B},\ldots,\rc{O} \in \{0,1\}} \var_{g,h=1,\rc{W},\rc{B},\ldots,\rc{O}} \tag{Hispanic or Latino} \\
-    \var_{g,h=0,\rc{W}=1} &= \var_{g,h=0,\rc{W}=1,\rc{B}=0,\ldots,\rc{O}=0} \tag{White Alone, Not Hispanic or Latino}
+    \var_{g,h=0,\rc{W}=1} &= \var_{g,h=0,\rc{W}=1,\rc{B}=0,\ldots,\rc{O}=0} \tag{White Alone, Not Hispanic or Latino} \\
+    \var_{g,h,\rc{W}=0,\rc{B}=0,\ldots,\rc{O}=0} &= 0 \tag{No race selected}
 \end{align*}
 
 \subsection{PUMS data}
@@ -48,7 +50,7 @@ PUMS gives us the full race/ethnicity tensor, so we can construct any race/ethni
 \begin{equation*}
     \var_{g^\star,h,\rc{W},\rc{B},\dots,\rc{O}} = \sum_{g \in g^\star} \var_{g,h,\rc{W}, \rc{B}, \dots, \rc{O}}
 \end{equation*}
-where $g^\star$ is a PUMA.
+where $g^\star$ is a PUMA or state.
 
 
 \section{Questionaire changes}
@@ -91,8 +93,10 @@ It seems that the best way to do this is to somehow use the PUMS data to disaggr
 
 To handle this problem more generally, suppose we flatten $\var$ into a vector $x \in \mathbb{Z}^n$. We then have a collection of marginals $y \in \mathbb{Z}^m$ where $y_j = \sum_{i \in S_j} x_i$ for subsets $S_j \subseteq \{1,2,\dots,n\}$. To be concrete, $S_j$ might represent the indices that need to be summed up to get a marginal like ``Black or African American alone'', and $y_j$ is the associated sum. We observe $y$, or at least a noisy version of $y$. Another way to write this is to let $A \in \{0,1\}^{m \times n}$ be a matrix where $A_{j,i} = \mathbb{1}\{i \in S_j\}$, such that $y = Ax$. The goal now is to get a posterior distribution for $x$ given that our observations of $y$ are noisy. Here are a few ideas for models.
 
-\subsection{Pseudoinverse}
-Because $y = Ax$, if there were no noise in $y$, and if $A$ were invertible, we could simply compute $x$ with $x = A^{-1}y$. However, $A$ is probably not invertible because $n$ is likely far greater than $m$, so it is not even square. That means we cannot use the inverse, but we could use the pseudoinverse of $A$, denoted $A^+$, which is the matrix that minimizes the squared error $\|AA^+y - y\|^2$. The pseudoinverse is easy to compute, and its only downsides are that it does not directly let us incorporate uncertainty in $y$ nor does it give uncertainty in $\hat{x} = A^+y$. (I am not sure, but this might be closely relate to the Bayesian normal-normal model below.)
+\subsubsection{Pseudoinverse}
+Because $y = Ax$, if there were no noise in $y$, and if $A$ were invertible, we could simply compute $x$ with $x = A^{-1}y$. However, $A$ is probably not invertible because $n$ is likely far greater than $m$, so it is not even square. That means we cannot use the inverse, but we could use the pseudoinverse of $A$, denoted $A^+$, which is the matrix that minimizes the squared error $\|AA^+y - y\|^2$. The pseudoinverse is easy to compute, and its only downsides are that it does not directly let us incorporate uncertainty in $y$ nor does it give uncertainty in $\hat{x} = A^+y$. Another problem with the pseudoinverse is that it does not constrain $x$ to be counts, and they can often end up as negative numbers. (I am not sure, but this might be closely relate to the Bayesian normal-normal model below.)
+
+One way to incorporate uncertainty in $y$ might be to simply push the samples through $A^+$. For example, if we had many samples of $y$ denoted $y^{(1)}, y^{(2)}, \dots, y^{(k)}$, then we could generate posterior samples of $x$ with $x^{(i)} = A^+ y^{(i)}$.
 
 \subsubsection{Poisson model}
 In this model, we put a Poisson prior over $x_i$.
@@ -120,8 +124,8 @@ I am not sure how this model relates to the Poisson model above, and it might be
 \subsubsection{Normal-Normal model}
 This model is quite unprincipled but it is simple to implement and I think it has a closed-form solution. Let
 \begin{align*}
-    x \sim \mathrm{Normal}(\mu_0, \Sigma_0) \\
-    y \sim \mathrm{Normal}(Ax, \sigma I)
+    x &\sim \mathrm{Normal}(\mu_0, \Sigma_0) \\
+    y &\sim \mathrm{Normal}(Ax, \sigma I)
 \end{align*}
 where $\sigma$ is the standard deviation of the noise. This is easy to fit, but now $x$ (not to mention $y$) is continuous and not necassarily non-negative which is not what we want. (I am not sure, but this might closely relate to the pseudoinverse approach above.)
 

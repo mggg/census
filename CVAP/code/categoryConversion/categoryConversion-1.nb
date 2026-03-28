@@ -1,0 +1,765 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 14.3' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[     29595,        757]
+NotebookOptionsPosition[     25243,        682]
+NotebookOutlinePosition[     25678,        699]
+CellTagsIndexPosition[     25635,        696]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["Init", "Section",ExpressionUUID->"8928359e-72f2-4ad6-8c52-54006f204978"],
+
+Cell[CellGroupData[{
+
+Cell["Base", "Subsection",ExpressionUUID->"dc945e5b-2372-48ee-8027-63772010d241"],
+
+Cell["Set the Census API key", "Text",ExpressionUUID->"69062c62-eae5-49b8-a5fa-f5da52dcc421"],
+
+Cell[BoxData[
+ RowBox[{"(*", 
+  RowBox[{
+   RowBox[{"SystemCredential", "[", "\"\<USCensusAPIKey\>\"", "]"}], 
+   "=", "\"\<your Census API key\>\""}], "*)"}]], "Input",ExpressionUUID->\
+"f4de0328-e141-423c-ab1a-4eda56efe578"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"Options", "[", "censusQuery", "]"}], "=", 
+   RowBox[{"{", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"Authentication", ":>", 
+      RowBox[{"SystemCredential", "[", "\"\<USCensusAPIKey\>\"", "]"}]}], ",",
+      "\[IndentingNewLine]", 
+     RowBox[{"\"\<APIBase\>\"", "->", "\"\<api.census.gov\>\""}]}], 
+    "\[IndentingNewLine]", "}"}]}], ";"}]], "Input",
+ CellChangeTimes->{{3.922479911547374*^9, 3.922479929606248*^9}, {
+   3.9224800492421618`*^9, 3.922480062096148*^9}, 3.92248026029036*^9, {
+   3.922538194005389*^9, 3.922538202913189*^9}},
+ CellLabel->"In[1]:=",ExpressionUUID->"c077cd48-afb0-4fca-8996-b2af92d958de"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"censusQuery", "[", 
+   RowBox[{"path_", ",", "query_", ",", 
+    RowBox[{"opts", ":", 
+     RowBox[{"OptionsPattern", "[", "]"}]}]}], "]"}], ":=", 
+  "\[IndentingNewLine]", 
+  RowBox[{"Enclose", "@", 
+   RowBox[{"Module", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"rawResponse", ",", "responseList"}], "}"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"rawResponse", "=", 
+       RowBox[{"Confirm", "@", 
+        RowBox[{"URLRead", "@", 
+         RowBox[{"HTTPRequest", "[", 
+          RowBox[{"<|", "\[IndentingNewLine]", 
+           RowBox[{
+            RowBox[{"\"\<Scheme\>\"", "->", "\"\<HTTPS\>\""}], ",", 
+            "\[IndentingNewLine]", 
+            RowBox[{"\"\<Domain\>\"", "->", 
+             RowBox[{"OptionValue", "[", "\"\<APIBase\>\"", "]"}]}], ",", 
+            "\[IndentingNewLine]", 
+            RowBox[{"\"\<Path\>\"", "->", "path"}], ",", 
+            "\[IndentingNewLine]", 
+            RowBox[{"\"\<Query\>\"", "->", 
+             RowBox[{"Join", "[", "\[IndentingNewLine]", 
+              RowBox[{"query", ",", "\[IndentingNewLine]", 
+               RowBox[{"{", 
+                RowBox[{"\"\<key\>\"", "->", 
+                 RowBox[{"OptionValue", "[", "Authentication", "]"}]}], 
+                "}"}]}], "\[IndentingNewLine]", "]"}]}]}], 
+           "\[IndentingNewLine]", "|>"}], "]"}]}]}]}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"responseList", "=", 
+       RowBox[{"Confirm", "[", 
+        RowBox[{
+         RowBox[{"Import", "[", 
+          RowBox[{"rawResponse", ",", "\"\<RawJSON\>\""}], "]"}], ",", 
+         "rawResponse"}], "]"}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{"ToTabular", "[", 
+       RowBox[{
+        RowBox[{"Rest", "@", "responseList"}], ",", "\"\<Rows\>\"", ",", 
+        RowBox[{"<|", 
+         RowBox[{"\"\<ColumnKeys\>\"", "->", 
+          RowBox[{"First", "@", "responseList"}]}], "|>"}]}], "]"}]}]}], 
+    "\[IndentingNewLine]", "]"}]}]}]], "Input",
+ CellLabel->"In[56]:=",ExpressionUUID->"364d4f2d-a39d-432b-bf35-c8a04c111e59"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Data", "Section",ExpressionUUID->"915f6f27-523a-4689-84c0-4ebb330461c8"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"fipsCode", "=", 
+  RowBox[{
+   TemplateBox[{"\"Georgia, United States\"", 
+     RowBox[{"Entity", "[", 
+       RowBox[{"\"AdministrativeDivision\"", ",", 
+         RowBox[{"{", 
+           RowBox[{"\"Georgia\"", ",", "\"UnitedStates\""}], "}"}]}], "]"}], 
+     "\"Entity[\\\"AdministrativeDivision\\\", {\\\"Georgia\\\", \
+\\\"UnitedStates\\\"}]\"", "\"administrative division\""},
+    "Entity"], "[", 
+   TemplateBox[{"\"FIPS code\"", 
+     RowBox[{"EntityProperty", "[", 
+       RowBox[{"\"AdministrativeDivision\"", ",", "\"FIPSCode\""}], "]"}], 
+     "\"EntityProperty[\\\"AdministrativeDivision\\\", \\\"FIPSCode\\\"]\""},
+    "EntityProperty"], "]"}]}]], "Input",
+ CellLabel->"In[42]:=",ExpressionUUID->"4d2332f2-7fa3-4d98-a97e-355ff9a1ecbf"],
+
+Cell[BoxData["\<\"13\"\>"], "Output",
+ CellLabel->"Out[42]=",ExpressionUUID->"c62317f7-d158-4fe6-8dc5-1dd03e0b93fb"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["ACS Detail Tables", "Subsection",ExpressionUUID->"d1fbd6e6-cf02-457e-99f8-6cc1524dc4bc"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"pathACS", "=", 
+   RowBox[{"{", 
+    RowBox[{"\"\<data\>\"", ",", "\"\<2022\>\"", ",", "\"\<acs\>\"", 
+     ",", "\"\<acs5\>\""}], "}"}]}], ";"}]], "Input",
+ CellLabel->"In[43]:=",ExpressionUUID->"e93304cb-cc9e-46fe-982c-e563392b76be"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"acsCategoriesCodes", "=", 
+   RowBox[{"<|", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"\"\<WhiteAlone\>\"", "->", "\"\<A\>\""}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"\"\<BlackOrAfricanAmericanAlone\>\"", "->", "\"\<B\>\""}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"\"\<AsianAlone\>\"", "->", "\"\<D\>\""}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"\"\<AmericanIndianAndAlaskaNativeAlone\>\"", 
+      "->", "\"\<C\>\""}], ",", "\[IndentingNewLine]", 
+     RowBox[{"\"\<NativeHawaiianAndOtherPacificIslanderAlone\>\"", 
+      "->", "\"\<E\>\""}], ",", "\[IndentingNewLine]", 
+     RowBox[{"\"\<SomeOtherRaceAlone\>\"", "->", "\"\<F\>\""}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"\"\<TwoOrMore\>\"", "->", "\"\<G\>\""}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"\"\<HispanicOrLatino\>\"", "->", "\"\<I\>\""}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"\"\<WhiteAloneNotHispanicOrLatino\>\"", "->", "\"\<H\>\""}], ",",
+      "\[IndentingNewLine]", 
+     RowBox[{"\"\<Overall\>\"", "->", "\"\<\>\""}]}], "\[IndentingNewLine]", 
+    "|>"}]}], ";"}]], "Input",
+ CellChangeTimes->{{3.922476831333517*^9, 3.922476942518358*^9}, {
+  3.923503367442129*^9, 3.923503381799529*^9}, {3.92548987961557*^9, 
+  3.925489883725133*^9}, {3.926469736066155*^9, 3.926469740370368*^9}, {
+  3.92949484289749*^9, 3.9294948441688213`*^9}},
+ CellLabel->"In[45]:=",ExpressionUUID->"9801286a-8536-4a0c-9ccc-fc24407e0107"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"getVAPVarsACS", "[", "r0_", "]"}], ":=", "\[IndentingNewLine]", 
+  RowBox[{"With", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"r", "=", 
+      RowBox[{"Replace", "[", 
+       RowBox[{"r0", ",", "acsCategoriesCodes"}], "]"}]}], "}"}], ",", 
+    "\[IndentingNewLine]", 
+    RowBox[{"{", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"\"\<B05003\>\"", "<>", "r", "<>", "\"\<_008E\>\""}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{"\"\<B05003\>\"", "<>", "r", "<>", "\"\<_019E\>\""}]}], 
+     "\[IndentingNewLine]", "}"}]}], "\[IndentingNewLine]", "]"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"getVAPVarsACS", "[", "r0_List", "]"}], ":=", 
+  RowBox[{"Union", "@@", 
+   RowBox[{"(", 
+    RowBox[{"getVAPVarsACS", "/@", "r0"}], ")"}]}]}]}], "Input",
+ CellLabel->"In[46]:=",ExpressionUUID->"830e6ce7-4fb0-41ba-8648-3c47c024e513"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["PUMS", "Subsection",ExpressionUUID->"0a14ce58-3345-45a9-9e09-f86c0719cbe4"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"pathPUMS", "=", 
+   RowBox[{"{", 
+    RowBox[{"\"\<data\>\"", ",", "\"\<2022\>\"", ",", "\"\<acs\>\"", 
+     ",", "\"\<acs5\>\"", ",", "\"\<pums\>\""}], "}"}]}], ";"}]], "Input",
+ CellLabel->"In[44]:=",ExpressionUUID->"ef1508b6-03d8-48c5-ac1a-d6a068c98d71"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"varsPUMS", "=", 
+   RowBox[{"{", 
+    RowBox[{"\"\<PWGTP\>\"", ",", "\"\<CIT\>\"", ",", "\"\<AGEP\>\"", 
+     ",", "\"\<HISP\>\"", ",", "\"\<RACWHT\>\"", ",", "\"\<RACBLK\>\"", 
+     ",", "\"\<RACASN\>\"", ",", "\"\<RACAIAN\>\"", ",", "\"\<RACNH\>\"", 
+     ",", "\"\<RACPI\>\"", ",", "\"\<RACSOR\>\"", ",", "\"\<RACNUM\>\""}], 
+    "}"}]}], ";"}]], "Input",
+ CellLabel->"In[50]:=",ExpressionUUID->"a95134ae-83e8-4d54-a7a5-abbd01fdce2b"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"getVAPStatePUMSRaw", "[", "fipsCode_", "]"}], ":=", 
+  "\[IndentingNewLine]", 
+  RowBox[{"censusQuery", "[", "\[IndentingNewLine]", 
+   RowBox[{"pathPUMS", ",", "\[IndentingNewLine]", 
+    RowBox[{"{", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"\"\<get\>\"", "->", 
+       RowBox[{"StringRiffle", "[", 
+        RowBox[{"varsPUMS", ",", "\"\<,\>\""}], "]"}]}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{"\"\<for\>\"", "->", 
+       RowBox[{"\"\<state:\>\"", "<>", "fipsCode"}]}]}], 
+     "\[IndentingNewLine]", "}"}]}], "\[IndentingNewLine]", "]"}]}]], "Input",\
+
+ CellLabel->"In[69]:=",ExpressionUUID->"6d228c20-729b-4ca9-8928-5e30c2261655"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"getVAPStatePUMS", "[", "fipsCode_", "]"}], ":=", 
+  "\[IndentingNewLine]", 
+  RowBox[{"Select", "[", "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"ConstructColumns", "[", 
+     RowBox[{
+      RowBox[{"getVAPStatePUMSRaw", "[", "fipsCode", "]"}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{"{", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"\"\<PersonWeight\>\"", "->", 
+         RowBox[{"Function", "[", 
+          RowBox[{"Cast", "[", 
+           RowBox[{"#PWGTP", ",", "\"\<UnsignedInteger16\>\""}], "]"}], 
+          "]"}]}], ",", "\[IndentingNewLine]", 
+        RowBox[{"\"\<Age\>\"", "->", 
+         RowBox[{"Function", "[", 
+          RowBox[{"Cast", "[", 
+           RowBox[{"#AGEP", ",", "\"\<UnsignedInteger8\>\""}], "]"}], "]"}]}],
+         ",", "\[IndentingNewLine]", 
+        RowBox[{"\"\<Citizen\>\"", "->", 
+         RowBox[{"Function", "[", 
+          RowBox[{"#CIT", "=!=", "\"\<5\>\""}], "]"}]}], ",", 
+        "\[IndentingNewLine]", 
+        RowBox[{"\"\<HispanicOrLatino\>\"", "->", 
+         RowBox[{"Function", "[", 
+          RowBox[{"#HISP", "=!=", "\"\<01\>\""}], "]"}]}], ",", 
+        "\[IndentingNewLine]", 
+        RowBox[{"\"\<White\>\"", "->", 
+         RowBox[{"Function", "[", 
+          RowBox[{"#RACWHT", "===", "\"\<1\>\""}], "]"}]}], ",", 
+        "\[IndentingNewLine]", 
+        RowBox[{"\"\<BlackOrAfricanAmerican\>\"", "->", 
+         RowBox[{"Function", "[", 
+          RowBox[{"#RACBLK", "===", "\"\<1\>\""}], "]"}]}], ",", 
+        "\[IndentingNewLine]", 
+        RowBox[{"\"\<Asian\>\"", "->", 
+         RowBox[{"Function", "[", 
+          RowBox[{"#RACASN", "===", "\"\<1\>\""}], "]"}]}], ",", 
+        "\[IndentingNewLine]", 
+        RowBox[{"\"\<AmericanIndianAndAlaskaNative\>\"", "->", 
+         RowBox[{"Function", "[", 
+          RowBox[{"#RACAIAN", "===", "\"\<1\>\""}], "]"}]}], ",", 
+        "\[IndentingNewLine]", 
+        RowBox[{"\"\<NativeHawaiianAndOtherPacificIslander\>\"", "->", 
+         RowBox[{"Function", "[", 
+          RowBox[{
+           RowBox[{"#RACNH", "===", "\"\<1\>\""}], "||", 
+           RowBox[{"#RACPI", "===", "\"\<1\>\""}]}], "]"}]}], ",", 
+        RowBox[{"(*", 
+         RowBox[{
+         "PUMS", " ", "splits", " ", "only", " ", "this", " ", "category", " ",
+           "into", " ", "two", " ", "variables", " ", "for", " ", "some", " ",
+           "reason"}], "*)"}], "\[IndentingNewLine]", 
+        RowBox[{"\"\<SomeOtherRace\>\"", "->", 
+         RowBox[{"Function", "[", 
+          RowBox[{"#RACSOR", "===", "\"\<1\>\""}], "]"}]}]}], 
+       "\[IndentingNewLine]", "}"}]}], "\[IndentingNewLine]", "]"}], ",", 
+    "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"#Age", ">=", "18"}], "&"}]}], "\[IndentingNewLine]", 
+   "]"}]}]], "Input",
+ CellLabel->"In[70]:=",ExpressionUUID->"b29caf10-feef-49e2-b9c0-c6b8b17de99f"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Scratch space", "Section",ExpressionUUID->"a87cb4d7-d979-4e5c-b359-db6638709d8e"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"raceEthnicityAxes", "=", 
+   RowBox[{"{", "\[IndentingNewLine]", 
+    RowBox[{"\"\<HispanicOrLatino\>\"", ",", 
+     "\[IndentingNewLine]", "\"\<White\>\"", ",", 
+     "\[IndentingNewLine]", "\"\<BlackOrAfricanAmerican\>\"", ",", 
+     "\[IndentingNewLine]", "\"\<Asian\>\"", ",", 
+     "\[IndentingNewLine]", "\"\<AmericanIndianAndAlaskaNative\>\"", ",", 
+     "\[IndentingNewLine]", "\"\<NativeHawaiianAndOtherPacificIslander\>\"", ",",
+      "\[IndentingNewLine]", "\"\<SomeOtherRace\>\""}], "\[IndentingNewLine]",
+     "}"}]}], ";"}]], "Input",
+ CellLabel->"In[72]:=",ExpressionUUID->"e0d45c49-a72c-4d19-b599-c2cf146fd76b"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"pums", "=", 
+   RowBox[{"getVAPStatePUMS", "[", "fipsCode", "]"}]}], ";"}]], "Input",Expres\
+sionUUID->"48e8850a-76b7-4e0f-b427-0b92bdd0d9d6"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"acs", "=", 
+   RowBox[{"CastColumns", "[", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"censusQuery", "[", "\[IndentingNewLine]", 
+      RowBox[{"pathACS", ",", "\[IndentingNewLine]", 
+       RowBox[{"{", "\[IndentingNewLine]", 
+        RowBox[{
+         RowBox[{"\"\<get\>\"", "->", 
+          RowBox[{"StringRiffle", "[", 
+           RowBox[{
+            RowBox[{"getVAPVarsACS", "[", 
+             RowBox[{"Keys", "[", "acsCategoriesCodes", "]"}], "]"}], 
+            ",", "\"\<,\>\""}], "]"}]}], ",", "\[IndentingNewLine]", 
+         RowBox[{"\"\<for\>\"", "->", "\"\<tract:*\>\""}], ",", 
+         "\[IndentingNewLine]", 
+         RowBox[{"\"\<in\>\"", "->", "\"\<county:*\>\""}], ",", 
+         "\[IndentingNewLine]", 
+         RowBox[{"\"\<in\>\"", "->", 
+          RowBox[{"\"\<state:\>\"", "<>", "fipsCode"}]}]}], 
+        "\[IndentingNewLine]", "}"}]}], "\[IndentingNewLine]", "]"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"getVAPVarsACS", "[", 
+       RowBox[{"Keys", "[", "acsCategoriesCodes", "]"}], "]"}], 
+      "->", "\"\<Integer\>\""}]}], "\[IndentingNewLine]", "]"}]}], 
+  ";"}]], "Input",
+ CellLabel->
+  "In[177]:=",ExpressionUUID->"7ad05dfc-b522-412b-b51a-d8e49bc6464e"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"geoids", "=", 
+   RowBox[{"Union", "@", 
+    RowBox[{"Normal", "@", 
+     RowBox[{
+      RowBox[{"ConstructColumns", "[", 
+       RowBox[{"acs", ",", 
+        RowBox[{"\"\<geoid\>\"", "->", 
+         RowBox[{"Function", "[", 
+          RowBox[{"#state", "<>", "#county", "<>", "#tract"}], "]"}]}]}], 
+       "]"}], "[", 
+      RowBox[{"[", 
+       RowBox[{"All", ",", "\"\<geoid\>\""}], "]"}], "]"}]}]}]}], 
+  ";"}]], "Input",
+ CellLabel->
+  "In[131]:=",ExpressionUUID->"22649e8c-01bb-48e3-b402-e284cebe31b2"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"geoidIndices", "=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"PositionIndex", "[", "geoids", "]"}], "[", 
+     RowBox[{"[", 
+      RowBox[{"All", ",", "1"}], "]"}], "]"}], "+", 
+    RowBox[{"Length", "[", "raceEthnicityAxes", "]"}]}]}], ";"}]], "Input",
+ CellLabel->
+  "In[285]:=",ExpressionUUID->"f37e9041-e18c-49ad-b12f-ff3198b3fbbb"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"raceEthnicityAxesIndices", "=", 
+   RowBox[{
+    RowBox[{"PositionIndex", "[", 
+     RowBox[{"DeleteCases", "[", 
+      RowBox[{
+       RowBox[{"Subsets", "[", 
+        RowBox[{"Sort", "@", "raceEthnicityAxes"}], "]"}], ",", 
+       RowBox[{
+        RowBox[{"{", "}"}], "|", 
+        RowBox[{"{", "\"\<HispanicOrLatino\>\"", "}"}]}]}], "]"}], "]"}], "[", 
+    RowBox[{"[", 
+     RowBox[{"All", ",", "1"}], "]"}], "]"}]}], ";"}]], "Input",
+ CellLabel->
+  "In[218]:=",ExpressionUUID->"639db744-b60e-4f53-b840-a6a5ed692594"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"acsCategoriesIndices", "=", 
+   RowBox[{"Map", "[", 
+    RowBox[{
+     RowBox[{"raceEthnicityAxesIndices", "@*", "Sort"}], ",", 
+     RowBox[{"<|", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"\"\<WhiteAlone\>\"", "->", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"{", "\"\<White\>\"", "}"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"\"\<White\>\"", ",", "\"\<HispanicOrLatino\>\""}], 
+           "}"}]}], "}"}]}], ",", "\[IndentingNewLine]", 
+       RowBox[{"\"\<BlackOrAfricanAmericanAlone\>\"", "->", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"{", "\"\<BlackOrAfricanAmerican\>\"", "}"}], ",", 
+          RowBox[{"{", 
+           
+           RowBox[{"\"\<BlackOrAfricanAmerican\>\"", 
+            ",", "\"\<HispanicOrLatino\>\""}], "}"}]}], "}"}]}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"\"\<AsianAlone\>\"", "->", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"{", "\"\<Asian\>\"", "}"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"\"\<Asian\>\"", ",", "\"\<HispanicOrLatino\>\""}], 
+           "}"}]}], "}"}]}], ",", "\[IndentingNewLine]", 
+       RowBox[{"\"\<AmericanIndianAndAlaskaNativeAlone\>\"", "->", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"{", "\"\<AmericanIndianAndAlaskaNative\>\"", "}"}], ",", 
+          RowBox[{"{", 
+           
+           RowBox[{"\"\<AmericanIndianAndAlaskaNative\>\"", 
+            ",", "\"\<HispanicOrLatino\>\""}], "}"}]}], "}"}]}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"\"\<NativeHawaiianAndOtherPacificIslanderAlone\>\"", "->", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"{", "\"\<NativeHawaiianAndOtherPacificIslander\>\"", "}"}],
+           ",", 
+          RowBox[{"{", 
+           
+           RowBox[{"\"\<NativeHawaiianAndOtherPacificIslander\>\"", 
+            ",", "\"\<HispanicOrLatino\>\""}], "}"}]}], "}"}]}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"\"\<SomeOtherRaceAlone\>\"", "->", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"{", "\"\<SomeOtherRace\>\"", "}"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"\"\<SomeOtherRace\>\"", ",", "\"\<HispanicOrLatino\>\""}],
+            "}"}]}], "}"}]}], ",", "\[IndentingNewLine]", 
+       RowBox[{"\"\<TwoOrMore\>\"", "->", 
+        RowBox[{"Catenate", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{"#", ",", 
+             RowBox[{"Union", "[", 
+              RowBox[{"#", ",", 
+               RowBox[{"{", "\"\<HispanicOrLatino\>\"", "}"}]}], "]"}]}], 
+            "}"}], "&"}], "/@", 
+          RowBox[{"Subsets", "[", 
+           RowBox[{
+            RowBox[{"DeleteCases", "[", 
+             RowBox[{"raceEthnicityAxes", ",", "\"\<HispanicOrLatino\>\""}], 
+             "]"}], ",", 
+            RowBox[{"{", 
+             RowBox[{"2", ",", "Infinity"}], "}"}]}], "]"}]}], "]"}]}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"\"\<HispanicOrLatino\>\"", "->", 
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"Union", "[", 
+            RowBox[{"#", ",", 
+             RowBox[{"{", "\"\<HispanicOrLatino\>\"", "}"}]}], "]"}], "&"}], "/@", 
+          RowBox[{"Subsets", "[", 
+           RowBox[{
+            RowBox[{"DeleteCases", "[", 
+             RowBox[{"raceEthnicityAxes", ",", "\"\<HispanicOrLatino\>\""}], 
+             "]"}], ",", 
+            RowBox[{"{", 
+             RowBox[{"1", ",", "Infinity"}], "}"}]}], "]"}]}], ")"}]}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"\"\<WhiteAloneNotHispanicOrLatino\>\"", "->", 
+        RowBox[{"{", 
+         RowBox[{"{", "\"\<White\>\"", "}"}], "}"}]}]}], 
+      "\[IndentingNewLine]", "|>"}], ",", 
+     RowBox[{"{", "2", "}"}]}], "]"}]}], ";"}]], "Input",
+ CellLabel->
+  "In[221]:=",ExpressionUUID->"57fd126b-ae40-424d-9008-e33f879e428b"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"marginalSets", "=", 
+   RowBox[{"{", "}"}]}], ";"}]], "Input",
+ CellLabel->
+  "In[290]:=",ExpressionUUID->"827c1f3c-5295-4094-9784-46868f606de3"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"KeyValueMap", "[", "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"AppendTo", "[", 
+      RowBox[{"marginalSets", ",", 
+       RowBox[{
+        RowBox[{"Union", "[", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{"raceEthnicityAxesIndices", "@", 
+            RowBox[{"Sort", "@", 
+             RowBox[{"Pick", "[", 
+              RowBox[{"raceEthnicityAxes", ",", "#1"}], "]"}]}]}], "}"}], ",", 
+          RowBox[{"Values", "@", "geoidIndices"}]}], "]"}], "->", "#2"}]}], 
+      "]"}], "&"}], ",", "\[IndentingNewLine]", 
+    RowBox[{"GroupBy", "[", 
+     RowBox[{"pums", ",", 
+      RowBox[{
+       RowBox[{"Lookup", "[", "raceEthnicityAxes", "]"}], "->", 
+       RowBox[{"Lookup", "[", "\"\<PersonWeight\>\"", "]"}]}], ",", "Total"}],
+      "]"}]}], "\[IndentingNewLine]", "]"}], ";"}]], "Input",
+ CellLabel->
+  "In[291]:=",ExpressionUUID->"192c7229-a070-444c-941a-ac18d20818a5"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Function", "[", 
+   RowBox[{"cat", ",", "\[IndentingNewLine]", 
+    RowBox[{"Module", "[", 
+     RowBox[{
+      RowBox[{"{", "agg", "}"}], ",", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"agg", "=", 
+        RowBox[{"ConstructColumns", "[", 
+         RowBox[{"acs", ",", 
+          RowBox[{"{", "\[IndentingNewLine]", 
+           RowBox[{
+            RowBox[{"\"\<v\>\"", "->", 
+             RowBox[{"Function", "[", 
+              RowBox[{"Total", "@", 
+               RowBox[{"Lookup", "[", 
+                RowBox[{"#", ",", 
+                 RowBox[{"getVAPVarsACS", "[", "cat", "]"}]}], "]"}]}], 
+              "]"}]}], ",", "\[IndentingNewLine]", 
+            RowBox[{"\"\<geoid\>\"", "->", 
+             RowBox[{"Function", "[", 
+              RowBox[{"#state", "<>", "#county", "<>", "#tract"}], "]"}]}]}], 
+           "\[IndentingNewLine]", "}"}]}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"Scan", "[", "\[IndentingNewLine]", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"AppendTo", "[", 
+           RowBox[{"marginalSets", ",", 
+            RowBox[{
+             RowBox[{"Union", "[", 
+              RowBox[{
+               RowBox[{"acsCategoriesIndices", "[", "cat", "]"}], ",", 
+               RowBox[{"{", 
+                RowBox[{"geoidIndices", "[", "#geoid", "]"}], "}"}]}], "]"}], 
+             "->", "#v"}]}], "]"}], "&"}], ",", "\[IndentingNewLine]", 
+         RowBox[{"FromTabular", "[", 
+          RowBox[{"agg", ",", "\"\<Rows\>\""}], "]"}]}], 
+        "\[IndentingNewLine]", "]"}]}]}], "\[IndentingNewLine]", "]"}]}], 
+   "\[IndentingNewLine]", "]"}], "@", "\"\<WhiteAlone\>\""}]], "Input",
+ CellLabel->
+  "In[292]:=",ExpressionUUID->"c10414fd-fb5b-46fe-bda0-57382bd8bab1"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Length", "@", 
+  RowBox[{"Values", "@", "marginalSets"}]}]], "Input",
+ CellLabel->
+  "In[297]:=",ExpressionUUID->"7903ef9a-d17b-495d-8dac-8992756d5cc4"],
+
+Cell[BoxData["2893"], "Output",
+ CellLabel->
+  "Out[297]=",ExpressionUUID->"a561c888-99e9-4824-b289-3a20a2537317"]
+}, Open  ]],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"sa", "=", 
+   RowBox[{"SparseArray", "[", 
+    RowBox[{
+     RowBox[{"{", "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"Length", "@", "marginalSets"}], ",", 
+       RowBox[{
+        RowBox[{"Length", "@", "raceEthnicityAxes"}], "+", 
+        RowBox[{"Length", "@", "geoids"}]}]}], "}"}]}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"MapIndexed", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{
+      RowBox[{
+       RowBox[{"sa", "[", 
+        RowBox[{"[", 
+         RowBox[{
+          RowBox[{"First", "[", "#2", "]"}], ",", 
+          RowBox[{"#1", "[", 
+           RowBox[{"[", "1", "]"}], "]"}]}], "]"}], "]"}], "=", "1"}], ";"}], 
+     "&"}], ",", "marginalSets"}], "]"}], ";"}]}], "Input",ExpressionUUID->\
+"438074c6-6929-4f45-befa-816e75743264"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"psa", "=", 
+    RowBox[{"PseudoInverse", "@", 
+     RowBox[{"N", "@", "sa"}]}]}], ";"}], "//", "EchoTiming"}]], "Input",
+ CellLabel->
+  "In[317]:=",ExpressionUUID->"5da05e13-ff4a-4836-adca-1a8ea88eaeb7"],
+
+Cell[BoxData["2.871656`"], "EchoTiming",ExpressionUUID->"5bd3514d-694b-4509-a3d1-3a455e70da26"]
+}, Open  ]],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"x", "=", 
+   RowBox[{"psa", ".", 
+    RowBox[{"N", "[", 
+     RowBox[{"Values", "[", "marginalSets", "]"}], "]"}]}]}], ";"}]], "Input",\
+
+ CellLabel->
+  "In[326]:=",ExpressionUUID->"f70f04b3-2c51-4328-8a81-030e29f5639e"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Total", "[", 
+  RowBox[{"x", "[", 
+   RowBox[{"[", 
+    RowBox[{"acsCategoriesIndices", "[", "\"\<WhiteAlone\>\"", "]"}], "]"}], 
+   "]"}], "]"}]], "Input",
+ CellLabel->
+  "In[328]:=",ExpressionUUID->"06a09b26-a6a3-43ad-bf02-62a55f421fa6"],
+
+Cell[BoxData["85.91671805921942`"], "Output",
+ CellLabel->
+  "Out[328]=",ExpressionUUID->"4e55628b-5265-4207-9be7-8ad3c8314626"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"acsCategoriesIndices", "[", "\"\<WhiteAlone\>\"", "]"}]], "Input",
+ CellLabel->
+  "In[329]:=",ExpressionUUID->"46997228-6d81-49bd-a9eb-a4d38ba2ce53"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"6", ",", "24"}], "}"}]], "Output",
+ CellLabel->
+  "Out[329]=",ExpressionUUID->"14392dd2-773d-4d8a-870d-3941f2934cc7"]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{808, 911},
+WindowMargins->{{116, Automatic}, {Automatic, 27}},
+TaggingRules-><|"TryRealOnly" -> False|>,
+FrontEndVersion->"14.3 for Mac OS X ARM (64-bit) (July 8, 2025)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"56d79bb8-2b9a-42ab-abae-2c4f2aeaa52d"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[576, 22, 78, 0, 66, "Section",ExpressionUUID->"8928359e-72f2-4ad6-8c52-54006f204978"],
+Cell[CellGroupData[{
+Cell[679, 26, 81, 0, 53, "Subsection",ExpressionUUID->"dc945e5b-2372-48ee-8027-63772010d241"],
+Cell[763, 28, 93, 0, 33, "Text",ExpressionUUID->"69062c62-eae5-49b8-a5fa-f5da52dcc421"],
+Cell[859, 30, 226, 5, 29, "Input",ExpressionUUID->"f4de0328-e141-423c-ab1a-4eda56efe578"],
+Cell[1088, 37, 678, 14, 90, "Input",ExpressionUUID->"c077cd48-afb0-4fca-8996-b2af92d958de"],
+Cell[1769, 53, 2071, 49, 294, "Input",ExpressionUUID->"364d4f2d-a39d-432b-bf35-c8a04c111e59"]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[3889, 108, 78, 0, 66, "Section",ExpressionUUID->"915f6f27-523a-4689-84c0-4ebb330461c8"],
+Cell[CellGroupData[{
+Cell[3992, 112, 772, 16, 36, "Input",ExpressionUUID->"4d2332f2-7fa3-4d98-a97e-355ff9a1ecbf"],
+Cell[4767, 130, 116, 1, 33, "Output",ExpressionUUID->"c62317f7-d158-4fe6-8dc5-1dd03e0b93fb"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[4920, 136, 94, 0, 53, "Subsection",ExpressionUUID->"d1fbd6e6-cf02-457e-99f8-6cc1524dc4bc"],
+Cell[5017, 138, 270, 6, 29, "Input",ExpressionUUID->"e93304cb-cc9e-46fe-982c-e563392b76be"],
+Cell[5290, 146, 1488, 29, 254, "Input",ExpressionUUID->"9801286a-8536-4a0c-9ccc-fc24407e0107"],
+Cell[6781, 177, 886, 21, 172, "Input",ExpressionUUID->"830e6ce7-4fb0-41ba-8648-3c47c024e513"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[7704, 203, 81, 0, 53, "Subsection",ExpressionUUID->"0a14ce58-3345-45a9-9e09-f86c0719cbe4"],
+Cell[7788, 205, 292, 6, 29, "Input",ExpressionUUID->"ef1508b6-03d8-48c5-ac1a-d6a068c98d71"],
+Cell[8083, 213, 472, 9, 49, "Input",ExpressionUUID->"a95134ae-83e8-4d54-a7a5-abbd01fdce2b"],
+Cell[8558, 224, 694, 16, 172, "Input",ExpressionUUID->"6d228c20-729b-4ca9-8928-5e30c2261655"],
+Cell[9255, 242, 2862, 64, 397, "Input",ExpressionUUID->"b29caf10-feef-49e2-b9c0-c6b8b17de99f"]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[12166, 312, 87, 0, 66, "Section",ExpressionUUID->"a87cb4d7-d979-4e5c-b359-db6638709d8e"],
+Cell[12256, 314, 662, 12, 192, "Input",ExpressionUUID->"e0d45c49-a72c-4d19-b599-c2cf146fd76b"],
+Cell[12921, 328, 177, 4, 29, "Input",ExpressionUUID->"48e8850a-76b7-4e0f-b427-0b92bdd0d9d6"],
+Cell[13101, 334, 1255, 29, 254, "Input",ExpressionUUID->"7ad05dfc-b522-412b-b51a-d8e49bc6464e"],
+Cell[14359, 365, 544, 16, 90, "Input",ExpressionUUID->"22649e8c-01bb-48e3-b402-e284cebe31b2"],
+Cell[14906, 383, 369, 10, 29, "Input",ExpressionUUID->"f37e9041-e18c-49ad-b12f-ff3198b3fbbb"],
+Cell[15278, 395, 556, 15, 70, "Input",ExpressionUUID->"639db744-b60e-4f53-b840-a6a5ed692594"],
+Cell[15837, 412, 3886, 96, 397, "Input",ExpressionUUID->"57fd126b-ae40-424d-9008-e33f879e428b"],
+Cell[19726, 510, 180, 5, 29, "Input",ExpressionUUID->"827c1f3c-5295-4094-9784-46868f606de3"],
+Cell[19909, 517, 946, 24, 131, "Input",ExpressionUUID->"192c7229-a070-444c-941a-ac18d20818a5"],
+Cell[20858, 543, 1772, 42, 274, "Input",ExpressionUUID->"c10414fd-fb5b-46fe-bda0-57382bd8bab1"],
+Cell[CellGroupData[{
+Cell[22655, 589, 176, 4, 29, "Input",ExpressionUUID->"7903ef9a-d17b-495d-8dac-8992756d5cc4"],
+Cell[22834, 595, 114, 2, 33, "Output",ExpressionUUID->"a561c888-99e9-4824-b289-3a20a2537317"]
+}, Open  ]],
+Cell[22963, 600, 820, 25, 49, "Input",ExpressionUUID->"438074c6-6929-4f45-befa-816e75743264"],
+Cell[CellGroupData[{
+Cell[23808, 629, 250, 7, 29, "Input",ExpressionUUID->"5da05e13-ff4a-4836-adca-1a8ea88eaeb7"],
+Cell[24061, 638, 95, 0, 23, "EchoTiming",ExpressionUUID->"5bd3514d-694b-4509-a3d1-3a455e70da26"]
+}, Open  ]],
+Cell[24171, 641, 255, 8, 29, "Input",ExpressionUUID->"f70f04b3-2c51-4328-8a81-030e29f5639e"],
+Cell[CellGroupData[{
+Cell[24451, 653, 263, 7, 29, "Input",ExpressionUUID->"06a09b26-a6a3-43ad-bf02-62a55f421fa6"],
+Cell[24717, 662, 128, 2, 33, "Output",ExpressionUUID->"4e55628b-5265-4207-9be7-8ad3c8314626"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[24882, 669, 173, 3, 29, "Input",ExpressionUUID->"46997228-6d81-49bd-a9eb-a4d38ba2ce53"],
+Cell[25058, 674, 157, 4, 33, "Output",ExpressionUUID->"14392dd2-773d-4d8a-870d-3941f2934cc7"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
