@@ -42,6 +42,7 @@ From the ACS detailed tables we have access to various contractions of $\var$. I
     \var_{g,2+} &= \sum_{h,\rc{W},\rc{B},\dots,\rc{O} \in \{0,1\}} \mathbb{1}(\rc{W} + \rc{B} + \dots + \rc{O} \geq 2)\var_{g,h,\rc{W}, \rc{B}, \dots, \rc{O}} \tag{Two or More} \\
     \var_{g,h=1} &= \sum_{\rc{W},\rc{B},\ldots,\rc{O} \in \{0,1\}} \var_{g,h=1,\rc{W},\rc{B},\ldots,\rc{O}} \tag{Hispanic or Latino} \\
     \var_{g,h=0,\rc{W}=1} &= \var_{g,h=0,\rc{W}=1,\rc{B}=0,\ldots,\rc{O}=0} \tag{White Alone, Not Hispanic or Latino} \\
+    \var_{g} &= \sum_{h,\rc{W},\rc{B},\dots,\rc{O} \in \{0,1\}} \var_{g,h,\rc{W}, \rc{B}, \dots, \rc{O}} \tag{Overall} \\
     \var_{g,h,\rc{W}=0,\rc{B}=0,\ldots,\rc{O}=0} &= 0 \tag{No race selected}
 \end{align*}
 
@@ -93,25 +94,33 @@ It seems that the best way to do this is to somehow use the PUMS data to disaggr
 
 To handle this problem more generally, suppose we flatten $\var$ into a vector $x \in \mathbb{Z}^n$. We then have a collection of marginals $y \in \mathbb{Z}^m$ where $y_j = \sum_{i \in S_j} x_i$ for subsets $S_j \subseteq \{1,2,\dots,n\}$. To be concrete, $S_j$ might represent the indices that need to be summed up to get a marginal like ``Black or African American alone'', and $y_j$ is the associated sum. We observe $y$, or at least a noisy version of $y$. Another way to write this is to let $A \in \{0,1\}^{m \times n}$ be a matrix where $A_{j,i} = \mathbb{1}\{i \in S_j\}$, such that $y = Ax$. The goal now is to get a posterior distribution for $x$ given that our observations of $y$ are noisy. Here are a few ideas for models.
 
-\subsubsection{Pseudoinverse}
-Because $y = Ax$, if there were no noise in $y$, and if $A$ were invertible, we could simply compute $x$ with $x = A^{-1}y$. However, $A$ is probably not invertible because $n$ is likely far greater than $m$, so it is not even square. That means we cannot use the inverse, but we could use the pseudoinverse of $A$, denoted $A^+$, which is the matrix that minimizes the squared error $\|AA^+y - y\|^2$. The pseudoinverse is easy to compute, and its only downsides are that it does not directly let us incorporate uncertainty in $y$ nor does it give uncertainty in $\hat{x} = A^+y$. Another problem with the pseudoinverse is that it does not constrain $x$ to be counts, and they can often end up as negative numbers. (I am not sure, but this might be closely relate to the Bayesian normal-normal model below.)
+\subsubsection{Feasible set methods}
+There is a feasible set $$\mathcal{F}(y) = \{x \in \mathbb{Z}_+^n : Ax = y\}$$ which is the set of all $x$ that are consistent with the observed $y$, assuming no noise in $y$. One class of approaches is to define some distribution over this feasible set.
 
-One way to incorporate uncertainty in $y$ might be to simply push the samples through $A^+$. For example, if we had many samples of $y$ denoted $y^{(1)}, y^{(2)}, \dots, y^{(k)}$, then we could generate posterior samples of $x$ with $x^{(i)} = A^+ y^{(i)}$.
+\paragraph{Least squares}
+From the formulation $y = Ax$, there is a natural least squares solution of the $x$ that minimizes the $L_2$ norm $\|Ax - y\|$. This is easy to compute (especially if $x$ is not restricted to being a non-negative integer). However, because $n \gg m$, this problem is underdetermined as there are many values of $x$ that give $Ax = y$ (the feasible set $\mathcal{F}(y)$ is potentially very large). Therefore this least squares approach does not get us anything if the marginals can align without perfectly. However, because there is noise in the marginals $y$, this least squares approach gives the $x$ that is as close to consistent with $y$ as possible. Given that there is no unique solution in the case with no noise, I do not know if it makes sense to pick the least squares solution in the noisy situation. This seems to be dodging the issue of intelligently defining a distribution over the feasible set.
+
+% \subsubsection{Pseudoinverse}
+% Because $y = Ax$, if there were no noise in $y$, and if $A$ were invertible, we could simply compute $x$ with $x = A^{-1}y$. However, $A$ is probably not invertible because $n$ is likely far greater than $m$, so it is not even square. That means we cannot use the inverse, but we could use the pseudoinverse of $A$, denoted $A^+$, which is the matrix that minimizes the squared error $\|AA^+y - y\|^2$. The pseudoinverse is easy to compute, and its only downsides are that it does not directly let us incorporate uncertainty in $y$ nor does it give uncertainty in $\hat{x} = A^+y$. Another problem with the pseudoinverse is that it does not constrain $x$ to be counts, and they can often end up as negative numbers. (I am not sure, but this might be closely relate to the Bayesian normal-normal model below.)
+
+% One way to incorporate uncertainty in $y$ might be to simply push the samples through $A^+$. For example, if we had many samples of $y$ denoted $y^{(1)}, y^{(2)}, \dots, y^{(k)}$, then we could generate posterior samples of $x$ with $x^{(i)} = A^+ y^{(i)}$.
 
 \subsubsection{Poisson model}
 In this model, we put a Poisson prior over $x_i$.
 \begin{equation*}
-    x_i \sim \mathrm{Poisson}(\lambda)
+    x_i \sim \mathrm{Poisson}(\lambda_i)
 \end{equation*}
 We also need to have some noise model for $y$. One option is for it to also be Poisson.
 \begin{equation*}
-    y_j \sim \mathrm{Poisson}\left(\sum_{i \in S_j} x_i\right)
+    y_j \sim \mathrm{Poisson}\left(\sum_{i \in S_j} \lambda_i\right)
 \end{equation*}
 The likelihood for $y_j$ could be something else (like a negative binomial, etc.) though I am not sure what. For example, it could be normal.
 \begin{equation*}
-    y_j \sim \mathrm{Normal}\left(\sum_{i \in S_j} x_i, \sigma_j\right)
+    y_j \sim \mathrm{Normal}\left(\sum_{i \in S_j} \lambda_i, \sigma_j\right)
 \end{equation*}
 This is nice because many of these marginals are reported as an estimate and standard error, but it is bad in that $y_j$ is discrete (and positive) and so this has the wrong support. (We actually have access to not just the standard error, but 80 draws from the distribution, though I am not sure how to use this.)
+
+This model can be fit efficiently using methods described by \citet[Chapter~3, p.~23-31]{schein}.
 
 \subsubsection{Dirichlet-Multinomial model}
 Let $N = \sum_i x_i$ (which we may assume we have access to). Then,
@@ -129,8 +138,16 @@ This model is quite unprincipled but it is simple to implement and I think it ha
 \end{align*}
 where $\sigma$ is the standard deviation of the noise. This is easy to fit, but now $x$ (not to mention $y$) is continuous and not necassarily non-negative which is not what we want. (I am not sure, but this might closely relate to the pseudoinverse approach above.)
 
+This has the same problems as the pseudoinverse approach in that it allows for non-integer and (more importantly) negative values for $x$. However, fixing this is as simple as truncated the normal prior on $x$ to force it to be non-negative.
+
+Another problem is that the covariance matrix $\Sigma_0$ can potentially be huge and dense. $x$ is usually vary large ($\sim 10^5$ or more), and $\Sigma_0$ has dimensions $|x| \times |x|$ which is impractical to work with. Searching about this it looks like there may be a way through using the Woodbury identity to instead work with a smaller matrix with dimensions $|y| \times |y|$, though I am not sure exactly how this works.
+
 \subsubsection{Iterative Proportional Fitting (IPF)}
-I am not too familiar with this, but it seems like a relevant procedure.
+I am not too familiar with this, but it seems like procedure with a relevant goal. However, its main purpose seems to be to get the exact integer values to line up consistently, which seems like a fairly irrelevant part of the problem. It would be good if the exact integer values align nicely, but that is not the main problem that we need to solve.
+
+
+\subsection{Avoiding Full Dissaggregation}
+In the cases above, we tried to recover the full $x$ from $A$ and $y$. However, we do not actually care about the full $x$, only about certain contractions of it. Let $S'_k$ be the set of indices that need to be summed up to get the $k$th target contraction of $x$, and let $y'_k = \sum_{i \in S'_k} x_i$ be the target sums. We can then define $A'_{j,i} = \mathbb{1}\{i \in S'_j\}$ to be the matrix that maps $x$ to $y'$. We then have that $A^{-1}yA' = xA' = y'$.
 
 
 \bibliographystyle{plainnat}
